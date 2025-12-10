@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Taco Bell Snake</title>
+  <style>
+    :root {
+      --tb-dark-purple: #702082;  /* Taco Bell dark purple [web:13] */
+      --tb-light-purple: #A77BCA; /* Taco Bell light purple [web:13] */
+      --tb-gold: #fee012;         /* Accent from Taco Bell palette [web:17] */
+      --tb-pink: #ef1897;         /* Accent from Taco Bell palette [web:17] */
+      --bg: #050509;
+      --board-bg: #111018;
+      --snake-body: #ffcc66;
+      --snake-head: #ffe9a3;
+      --food: #ef1897;
+      --grid-line: #222030;
+      --text: #f5f5f5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #1e1233 0, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .shell {
+      background: linear-gradient(145deg, #1b102e 0, #07050b 60%);
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.7),
+        0 0 0 1px rgba(255, 255, 255, 0.04);
+      padding: 18px 20px 20px;
+      width: 480px;
+      max-width: 96vw;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .title-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .bell-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: radial-gradient(circle at 30% 20%, #ffffff 0, #d7c4ff 32%, #702082 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #1b0a2b;
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.18),
+        0 8px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .title-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .title-text h1 {
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .title-text span {
+      font-size: 11px;
+      color: rgba(245, 245, 245, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .score-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      align-items: flex-end;
+    }
+
+    .score-row {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: rgba(245, 245, 245, 0.6);
+    }
+
+    .value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--tb-gold);
+      text-shadow: 0 0 10px rgba(254, 224, 18, 0.4);
+    }
+
+    .best {
+      font-size: 11px;
+      color: rgba(245, 245, 245, 0.72);
+    }
+
+    .controls {
+      margin-top: 4px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 11px;
+    }
+
+    .speed-control {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+    }
+
+    .speed-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .speed-row span {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: rgba(245, 245, 245, 0.7);
+      font-size: 10px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--tb-pink), var(--tb-gold));
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--tb-dark-purple);
+      box-shadow: 0 0 0 3px rgba(167, 123, 202, 0.3);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid var(--tb-dark-purple);
+      box-shadow: 0 0 0 3px rgba(167, 123, 202, 0.3);
+      cursor: pointer;
+    }
+
+    .speed-label {
+      font-size: 10px;
+      color: rgba(245, 245, 245, 0.75);
+    }
+
+    .hint {
+      font-size: 10px;
+      color: rgba(245, 245, 245, 0.7);
+      text-align: right;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .board-wrapper {
+      border-radius: 14px;
+      padding: 10px;
+      background: radial-gradient(circle at top, #28143f 0, #0b050f 55%);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 10px 26px rgba(0, 0, 0, 0.9);
+    }
+
+    canvas {
+      display: block;
+      background: radial-gradient(circle at 15% 0, #342356 0, var(--board-bg) 50%);
+      border-radius: 10px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 0 0 1px rgba(0, 0, 0, 0.8);
+    }
+
+    .bottom-row {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: rgba(245, 245, 245, 0.75);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .taco-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 10px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    .dot.head {
+      background: var(--snake-head);
+    }
+
+    .dot.body {
+      background: var(--snake-body);
+    }
+
+    .dot.food {
+      background: var(--food);
+      border-radius: 50%;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: rgba(5, 5, 9, 0.86);
+      color: #fff;
+      flex-direction: column;
+      text-align: center;
+    }
+
+    .overlay h2 {
+      font-size: 20px;
+      margin-bottom: 4px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .overlay p {
+      font-size: 12px;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+
+    .overlay button {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 20px;
+      background: linear-gradient(90deg, var(--tb-pink), var(--tb-gold));
+      color: #1b0a2b;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .board-container {
+      position: relative;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div class="title-block">
+        <div class="bell-icon">🔔</div>
+        <div class="title-text">
+          <h1>Late Night Snake Run</h1>
+          <span>Taco Bell Edition</span>
+        </div>
+      </div>
+      <div class="score-panel">
+        <div class="score-row">
+          <span class="label">Score</span>
+          <span id="score" class="value">0</span>
+        </div>
+        <div class="score-row">
+          <span class="label">Best</span>
+          <span id="best" class="best">0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="speed-control">
+        <div class="speed-row">
+          <span>Drive‑Thru Speed</span>
+          <span id="speedLabel" class="speed-label">Medium</span>
+        </div>
+        <input
+          id="speedRange"
+          type="range"
+          min="1"
+          max="3"
+          step="1"
+          value="2"
+        />
+      </div>
+      <div class="hint">
+        ← ↑ ↓ → to play
+      </div>
+    </div>
+
+    <div class="board-wrapper">
+      <div class="board-container">
+        <canvas id="game" width="400" height="400"></canvas>
+
+        <div id="overlay" class="overlay">
+          <h2>Order Crashed</h2>
+          <p>Your taco run ended. Press restart or hit Space.</p>
+          <button id="restartBtn">Restart Run</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <div class="taco-legend">
+        <span><span class="dot head"></span> Head</span>
+        <span><span class="dot body"></span> Shell</span>
+        <span><span class="dot food"></span> Taco</span>
+      </div>
+      <div>
+        Avoid walls & your own shell.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Config
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 20;
+    const tileCount = canvas.width / gridSize;
+
+    const scoreEl = document.getElementById("score");
+    const bestEl = document.getElementById("best");
+    const speedRange = document.getElementById("speedRange");
+    const speedLabel = document.getElementById("speedLabel");
+    const overlay = document.getElementById("overlay");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // Game state
+    let snake;
+    let food;
+    let dx;
+    let dy;
+    let score;
+    let bestScore = parseInt(localStorage.getItem("tb_snake_best") || "0", 10);
+    bestEl.textContent = bestScore;
+
+    let baseInterval = 130; // ms at medium speed
+    let gameIntervalId = null;
+    let pendingDirection = null;
+    let running = false;
+
+    function speedFromSlider() {
+      const level = parseInt(speedRange.value, 10);
+      // 1 = slow, 2 = medium, 3 = fast
+      if (level === 1) return 180;
+      if (level === 2) return 130;
+      return 90;
+    }
+
+    function updateSpeedLabel() {
+      const level = parseInt(speedRange.value, 10);
+      if (level === 1) {
+        speedLabel.textContent = "Chill (Slow)";
+      } else if (level === 2) {
+        speedLabel.textContent = "Medium";
+      } else {
+        speedLabel.textContent = "Rush Hour (Fast)";
+      }
+    }
+
+    function initGame() {
+      snake = [
+        { x: 8, y: 10 },
+        { x: 7, y: 10 },
+        { x: 6, y: 10 }
+      ];
+      dx = 1;
+      dy = 0;
+      score = 0;
+      pendingDirection = null;
+      running = true;
+      overlay.style.display = "none";
+      scoreEl.textContent = score;
+      placeFood();
+      baseInterval = speedFromSlider();
+      restartLoop();
+    }
+
+    function restartLoop() {
+      if (gameIntervalId) {
+        clearInterval(gameIntervalId);
+      }
+      gameIntervalId = setInterval(gameLoop, baseInterval);
+    }
+
+    function placeFood() {
+      let newFood;
+      let collision;
+      do {
+        collision = false;
+        newFood = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+        for (const segment of snake) {
+          if (segment.x === newFood.x && segment.y === newFood.y) {
+            collision = true;
+            break;
+          }
+        }
+      } while (collision);
+      food = newFood;
+    }
+
+    function gameLoop() {
+      if (!running) return;
+
+      updateDirectionFromPending();
+      const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+
+      // Collision with walls
+      if (
+        head.x < 0 ||
+        head.y < 0 ||
+        head.x >= tileCount ||
+        head.y >= tileCount
+      ) {
+        return endGame();
+      }
+
+      // Collision with self
+      for (const segment of snake) {
+        if (segment.x === head.x && segment.y === head.y) {
+          return endGame();
+        }
+      }
+
+      snake.unshift(head);
+
+      // Check food
+      if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        scoreEl.textContent = score;
+        // Slightly speed up each taco eaten
+        baseInterval = Math.max(60, baseInterval - 3);
+        restartLoop();
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function drawGrid() {
+      ctx.fillStyle = "#111018";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = "rgba(255,255,255,0.04)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < tileCount; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * gridSize, 0);
+        ctx.lineTo(i * gridSize, canvas.height);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(0, i * gridSize);
+        ctx.lineTo(canvas.width, i * gridSize);
+        ctx.stroke();
+      }
+    }
+
+    function drawSnake() {
+      // Body
+      for (let i = snake.length - 1; i >= 1; i--) {
+        const segment = snake[i];
+        ctx.fillStyle = "rgba(255,204,102,0.95)";
+        ctx.fillRect(
+          segment.x * gridSize + 2,
+          segment.y * gridSize + 2,
+          gridSize - 4,
+          gridSize - 4
+        );
+      }
+
+      // Head
+      const head = snake[0];
+      const x = head.x * gridSize;
+      const y = head.y * gridSize;
+      const radius = gridSize / 2 - 1;
+
+      const centerX = x + gridSize / 2;
+      const centerY = y + gridSize / 2;
+
+      ctx.beginPath();
+      ctx.fillStyle = "#ffeec0";
+      ctx.arc(centerX, centerY, radius, Math.PI * 0.15, Math.PI * 1.85);
+      ctx.closePath();
+      ctx.fill();
+
+      // Little bell clapper
+      ctx.beginPath();
+      ctx.fillStyle = "#f7c94c";
+      ctx.arc(centerX, centerY + radius / 2.2, radius / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Eyes
+      ctx.fillStyle = "#1b0a2b";
+      const eyeOffsetX = dx === 0 ? radius / 2.6 : radius / 2.1;
+      const eyeOffsetY = dy === 0 ? radius / 3 : radius / 2.2;
+
+      const leftEyeX = centerX - (dx === -1 ? eyeOffsetX : dx === 1 ? -eyeOffsetX : eyeOffsetX);
+      const rightEyeX = centerX + (dx === -1 ? eyeOffsetX : dx === 1 ? -eyeOffsetX : eyeOffsetX);
+      const eyeY = centerY - (dy === -1 ? eyeOffsetY : dy === 1 ? -eyeOffsetY : eyeOffsetY);
+
+      ctx.beginPath();
+      ctx.arc(leftEyeX, eyeY, 2, 0, Math.PI * 2);
+      ctx.arc(rightEyeX, eyeY, 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawFood() {
+      const x = food.x * gridSize;
+      const y = food.y * gridSize;
+
+      // Tortilla shell
+      ctx.beginPath();
+      ctx.fillStyle = "#f5e1a4";
+      ctx.moveTo(x + 3, y + gridSize - 3);
+      ctx.quadraticCurveTo(
+        x + gridSize / 2,
+        y + gridSize / 2 - 6,
+        x + gridSize - 3,
+        y + gridSize - 3
+      );
+      ctx.fill();
+
+      // Filling
+      ctx.beginPath();
+      ctx.fillStyle = "#b3452b";
+      ctx.moveTo(x + 4, y + gridSize - 6);
+      ctx.quadraticCurveTo(
+        x + gridSize / 2,
+        y + gridSize / 2,
+        x + gridSize - 4,
+        y + gridSize - 6
+      );
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = "#5aa13b";
+      ctx.moveTo(x + 6, y + gridSize - 8);
+      ctx.quadraticCurveTo(
+        x + gridSize / 2,
+        y + gridSize / 2 - 2,
+        x + gridSize - 6,
+        y + gridSize - 8
+      );
+      ctx.fill();
+
+      // Hot sauce sparkle
+      ctx.fillStyle = "#ef1897";
+      ctx.fillRect(x + gridSize / 2 - 1, y + gridSize / 2 - 1, 2, 2);
+    }
+
+    function draw() {
+      drawGrid();
+      drawFood();
+      drawSnake();
+    }
+
+    function endGame() {
+      running = false;
+      clearInterval(gameIntervalId);
+      gameIntervalId = null;
+      if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem("tb_snake_best", String(bestScore));
+        bestEl.textContent = bestScore;
+      }
+      overlay.style.display = "flex";
+    }
+
+    function updateDirectionFromPending() {
+      if (!pendingDirection) return;
+      const { x, y } = pendingDirection;
+      // Prevent reversing instantly
+      if (x === -dx && y === -dy) {
+        pendingDirection = null;
+        return;
+      }
+      dx = x;
+      dy = y;
+      pendingDirection = null;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (!running && (e.code === "Space" || e.code === "Enter")) {
+        initGame();
+        return;
+      }
+
+      if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        return;
+      }
+
+      e.preventDefault();
+      if (e.key === "ArrowUp") {
+        pendingDirection = { x: 0, y: -1 };
+      } else if (e.key === "ArrowDown") {
+        pendingDirection = { x: 0, y: 1 };
+      } else if (e.key === "ArrowLeft") {
+        pendingDirection = { x: -1, y: 0 };
+      } else if (e.key === "ArrowRight") {
+        pendingDirection = { x: 1, y: 0 };
+      }
+    });
+
+    restartBtn.addEventListener("click", () => {
+      initGame();
+    });
+
+    speedRange.addEventListener("input", () => {
+      updateSpeedLabel();
+      baseInterval = speedFromSlider();
+      if (running) {
+        restartLoop();
+      }
+    });
+
+    // Initial draw & setup
+    updateSpeedLabel();
+    drawGrid();
+    // Center instructions text
+    ctx.fillStyle = "rgba(245,245,245,0.9)";
+    ctx.font = "14px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillText("Press any arrow key to start your taco run", canvas.width / 2, canvas.height / 2);
+
+    // Start when player first presses an arrow
+    document.addEventListener(
+      "keydown",
+      function firstStart(ev) {
+        if (
+          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(ev.key)
+        ) {
+          initGame();
+          document.removeEventListener("keydown", firstStart);
+        }
+      },
+      { once: true }
+    );
+  </script>
+</body>
+</html>
